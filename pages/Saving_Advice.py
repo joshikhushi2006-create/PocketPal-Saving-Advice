@@ -389,14 +389,22 @@ with tab_insights:
             color_continuous_scale=["#2e1f4d", "#7c3aed", "#e879f9"]
         )
         fig_bar.update_traces(texttemplate="₹%{text:,.0f}", textposition="outside", textfont=dict(color="#f3e8ff"))
-        fig_bar.update_layout(
-            **DARK_LAYOUT,
-            yaxis=dict(autorange="reversed", gridcolor="#2e1f4d", tickfont=dict(color="#f3e8ff")),
-            xaxis=dict(gridcolor="#2e1f4d", tickfont=dict(color="#f3e8ff")),
-            margin=dict(l=10, r=40, t=10, b=10),
-            height=340,
-            coloraxis_showscale=False
-        )
+        bar_layout = DARK_LAYOUT.copy()
+bar_layout.update({
+    "yaxis": dict(
+        autorange="reversed",
+        gridcolor="#2e1f4d",
+        tickfont=dict(color="#f3e8ff")
+    ),
+    "xaxis": dict(
+        gridcolor="#2e1f4d",
+        tickfont=dict(color="#f3e8ff")
+    ),
+    "margin": dict(l=10, r=40, t=10, b=10),
+    "height": 340,
+    "coloraxis_showscale": False
+})
+fig_bar.update_layout(**bar_layout)
         st.plotly_chart(fig_bar, use_container_width=True)
         
     st.markdown("---")
