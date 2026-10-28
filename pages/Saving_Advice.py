@@ -756,24 +756,33 @@ with tab_advice:
             textfont=dict(color="#f3e8ff", size=13, family="sans-serif")
         ))
 
-        fig_cluster.update_layout(
-            **DARK_LAYOUT,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            height=450
-        )
-        st.plotly_chart(fig_cluster, use_container_width=True)
+        
+        cluster_layout = DARK_LAYOUT.copy()
+cluster_layout.update({
+    "legend": dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    ),
+    "height": 450
+})
 
-        st.markdown("---")
+fig_cluster.update_layout(**cluster_layout)
+st.plotly_chart(fig_cluster, use_container_width=True)
 
-        # Archetype Characteristics Table
-        st.markdown("##### 📋 Student Spending Archetype Benchmark Table")
-        summary_archetypes = cohort_df.groupby("Archetype")[["Total_Spend", "Discretionary_Ratio", "Txn_Frequency", "Avg_Txn_Amount"]].mean().reset_index()
-        summary_archetypes.columns = ["Student Archetype", "Avg Monthly Spend (₹)", "Discretionary Ratio (%)", "Monthly Txns", "Avg Txn Size (₹)"]
-        summary_archetypes["Avg Monthly Spend (₹)"] = summary_archetypes["Avg Monthly Spend (₹)"].apply(lambda x: f"₹{x:,.2f}")
-        summary_archetypes["Discretionary Ratio (%)"] = summary_archetypes["Discretionary Ratio (%)"].apply(lambda x: f"{x:.1f}%")
-        summary_archetypes["Monthly Txns"] = summary_archetypes["Monthly Txns"].apply(lambda x: f"{x:.0f} txns")
-        summary_archetypes["Avg Txn Size (₹)"] = summary_archetypes["Avg Txn Size (₹)"].apply(lambda x: f"₹{x:,.2f}")
+st.markdown("---")
 
-        st.dataframe(summary_archetypes, use_container_width=True, hide_index=True)
+# Archetype Characteristics Table
+st.markdown("##### 📋 Student Spending Archetype Benchmark Table")
+summary_archetypes = cohort_df.groupby("Archetype")[["Total_Spend", "Discretionary_Ratio", "Txn_Frequency", "Avg_Txn_Amount"]].mean().reset_index()
+summary_archetypes.columns = ["Student Archetype", "Avg Monthly Spend (₹)", "Discretionary Ratio (%)", "Monthly Txns", "Avg Txn Size (₹)"]
+summary_archetypes["Avg Monthly Spend (₹)"] = summary_archetypes["Avg Monthly Spend (₹)"].apply(lambda x: f"₹{x:,.2f}")
+summary_archetypes["Discretionary Ratio (%)"] = summary_archetypes["Discretionary Ratio (%)"].apply(lambda x: f"{x:.1f}%")
+summary_archetypes["Monthly Txns"] = summary_archetypes["Monthly Txns"].apply(lambda x: f"{x:.0f} txns")
+summary_archetypes["Avg Txn Size (₹)"] = summary_archetypes["Avg Txn Size (₹)"].apply(lambda x: f"₹{x:,.2f}")
 
-        st.info("💡 **Model Methodology**: Feature standardization via `StandardScaler()`, followed by partition-based clustering with `KMeans(k=4, random_state=42)`. Your current financial profile is dynamically scaled and projected onto the trained feature space.")
+st.dataframe(summary_archetypes, use_container_width=True, hide_index=True)
+
+st.info("💡 **Model Methodology**: Feature standardization via `StandardScaler()`, followed by partition-based clustering with `KMeans(k=4, random_state=42)`. Your current financial profile is dynamically scaled and projected onto the trained feature space.")
