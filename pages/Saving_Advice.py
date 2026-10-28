@@ -486,64 +486,73 @@ with tab_mom:
         color_discrete_sequence=POCKETPAL_COLORS,
         title="Category-wise Spending Across Months"
     )
-    fig_mom.update_layout(
-        **DARK_LAYOUT,
-        yaxis_title="Amount (₹)",
-        xaxis_title="Academic Month",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    mom_layout = DARK_LAYOUT.copy()
+    mom_layout.update({
+    "yaxis_title": "Amount (₹)",
+    "xaxis_title": "Academic Month",
+    "legend": dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
     )
-    st.plotly_chart(fig_mom, use_container_width=True)
+})
+fig_mom.update_layout(**mom_layout)
+st.plotly_chart(fig_mom, use_container_width=True)
+
+
     
-    st.markdown("---")
-    st.subheader("🔬 Deep-Dive: Compare Any Two Months")
+st.markdown("---")
+st.subheader("🔬 Deep-Dive: Compare Any Two Months")
     
-    c_m1, c_m2 = st.columns(2)
-    with c_m1:
-        month_a = st.selectbox("Select Baseline Month (A)", months_order, index=max(0, len(months_order)-2))
-    with c_m2:
-        month_b = st.selectbox("Select Comparison Month (B)", months_order, index=len(months_order)-1)
-        
-    df_a = df[df["Year_Month"] == month_a].groupby("Category")["Amount"].sum()
-    df_b = df[df["Year_Month"] == month_b].groupby("Category")["Amount"].sum()
+c_m1, c_m2 = st.columns(2)
+with c_m1:
+    month_a = st.selectbox("Select Baseline Month (A)", months_order, index=max(0, len(months_order)-2))
+with c_m2:
+    month_b = st.selectbox("Select Comparison Month (B)", months_order, index=len(months_order)-1)
     
-    comparison_table = pd.DataFrame({
-        f"{month_a} (₹)": df_a,
-        f"{month_b} (₹)": df_b
-    }).fillna(0)
-    
-    comparison_table["Difference (₹)"] = comparison_table[f"{month_b} (₹)"] - comparison_table[f"{month_a} (₹)"]
-    comparison_table["% Change"] = np.where(
-        comparison_table[f"{month_a} (₹)"] > 0,
-        (comparison_table["Difference (₹)"] / comparison_table[f"{month_a} (₹)"]) * 100,
-        0.0
-    )
-    
-    # Styled Table
-    st.markdown(f"##### Variance Table ({month_a} vs {month_b})")
-    formatted_comp = comparison_table.copy()
-    formatted_comp[f"{month_a} (₹)"] = formatted_comp[f"{month_a} (₹)"].apply(lambda x: f"₹{x:,.2f}")
-    formatted_comp[f"{month_b} (₹)"] = formatted_comp[f"{month_b} (₹)"].apply(lambda x: f"₹{x:,.2f}")
-    formatted_comp["Difference (₹)"] = formatted_comp["Difference (₹)"].apply(lambda x: f"{'+' if x>0 else ''}₹{x:,.2f}")
-    formatted_comp["% Change"] = formatted_comp["% Change"].apply(lambda x: f"{'+' if x>0 else ''}{x:.1f}%")
-    st.dataframe(formatted_comp, use_container_width=True)
-    
-    # Top Surge & Top Saver
-    biggest_surge = comparison_table["Difference (₹)"].idxmax()
-    biggest_surge_val = comparison_table["Difference (₹)"].max()
-    biggest_drop = comparison_table["Difference (₹)"].idxmin()
-    biggest_drop_val = comparison_table["Difference (₹)"].min()
-    
-    col_s1, col_s2 = st.columns(2)
-    with col_s1:
-        if biggest_surge_val > 0:
-            st.warning(f"🚨 **Surge Alert**: Spending on **{biggest_surge}** rose by **₹{biggest_surge_val:,.2f}** in {month_b}.")
-        else:
-            st.info("No category saw an increase in spending.")
-    with col_s2:
-        if biggest_drop_val < 0:
-            st.success(f"🎉 **Savings Win**: Spending on **{biggest_drop}** reduced by **₹{abs(biggest_drop_val):,.2f}** in {month_b}.")
-        else:
-            st.info("No spending reductions detected between these months.")
+df_a = df[df["Year_Month"] == month_a].groupby("Category")["Amount"].sum()
+df_b = df[df["Year_Month"] == month_b].groupby("Category")["Amount"].sum()
+
+comparison_table = pd.DataFrame({
+    f"{month_a} (₹)": df_a,
+    f"{month_b} (₹)": df_b
+}).fillna(0)
+
+comparison_table["Difference (₹)"] = comparison_table[f"{month_b} (₹)"] - comparison_table[f"{month_a} (₹)"]
+comparison_table["% Change"] = np.where(
+    comparison_table[f"{month_a} (₹)"] > 0,
+    (comparison_table["Difference (₹)"] / comparison_table[f"{month_a} (₹)"]) * 100,
+    0.0
+)
+
+# Styled Table
+st.markdown(f"##### Variance Table ({month_a} vs {month_b})")
+formatted_comp = comparison_table.copy()
+formatted_comp[f"{month_a} (₹)"] = formatted_comp[f"{month_a} (₹)"].apply(lambda x: f"₹{x:,.2f}")
+formatted_comp[f"{month_b} (₹)"] = formatted_comp[f"{month_b} (₹)"].apply(lambda x: f"₹{x:,.2f}")
+formatted_comp["Difference (₹)"] = formatted_comp["Difference (₹)"].apply(lambda x: f"{'+' if x>0 else ''}₹{x:,.2f}")
+formatted_comp["% Change"] = formatted_comp["% Change"].apply(lambda x: f"{'+' if x>0 else ''}{x:.1f}%")
+st.dataframe(formatted_comp, use_container_width=True)
+
+# Top Surge & Top Saver
+biggest_surge = comparison_table["Difference (₹)"].idxmax()
+biggest_surge_val = comparison_table["Difference (₹)"].max()
+biggest_drop = comparison_table["Difference (₹)"].idxmin()
+biggest_drop_val = comparison_table["Difference (₹)"].min()
+
+col_s1, col_s2 = st.columns(2)
+with col_s1:
+    if biggest_surge_val > 0:
+        st.warning(f"🚨 **Surge Alert**: Spending on **{biggest_surge}** rose by **₹{biggest_surge_val:,.2f}** in {month_b}.")
+    else:
+        st.info("No category saw an increase in spending.")
+with col_s2:
+    if biggest_drop_val < 0:
+        st.success(f"🎉 **Savings Win**: Spending on **{biggest_drop}** reduced by **₹{abs(biggest_drop_val):,.2f}** in {month_b}.")
+    else:
+        st.info("No spending reductions detected between these months.")
 
 # -------------------------------------------------------------
 # TAB 3: SAVING RECOMMENDATIONS & GOAL SIMULATOR
@@ -551,16 +560,16 @@ with tab_mom:
 with tab_advice:
     st.subheader("💡 Tailored Student Saving Advice & Recommendations")
     st.caption("Actionable, rule-based strategies and dynamic monthly savings calculator")
-    
+
     # 50/30/20 Rule Benchmark
     st.markdown("#### 🎯 50/30/20 Student Budget Rule Benchmark")
     total_spent_val = df["Amount"].sum()
     needs_spent_val = df[df["Category"].isin(NEEDS_CATEGORIES)]["Amount"].sum()
     wants_spent_val = df[df["Category"].isin(WANTS_CATEGORIES)]["Amount"].sum()
-    
+
     needs_pct = (needs_spent_val / total_spent_val) * 100 if total_spent_val > 0 else 0
     wants_pct = (wants_spent_val / total_spent_val) * 100 if total_spent_val > 0 else 0
-    
+
     col_rule1, col_rule2 = st.columns([1.2, 1])
     with col_rule1:
         st.write(f"• **Needs (Essentials)**: **{needs_pct:.1f}%** (Benchmark: 50%)")
@@ -578,15 +587,15 @@ with tab_advice:
             st.info(f"ℹ️ **Moderate Discretionary**: At {wants_pct:.1f}%, your wants spending is close to the recommended threshold.")
             
     st.markdown("---")
-    
+
     # Actionable Student Tips
     st.markdown("#### 🎓 Personalized Student Cost-Optimization Tips")
-    
+
     food_total = df[df["Category"] == "Food & Dining"]["Amount"].sum()
     ent_total = df[df["Category"] == "Entertainment & Leisure"]["Amount"].sum()
     acad_total = df[df["Category"] == "Academics & Books"]["Amount"].sum()
     transit_total = df[df["Category"] == "Transportation"]["Amount"].sum()
-    
+
     tip_cols = st.columns(2)
     with tip_cols[0]:
         st.markdown(f"""
@@ -619,11 +628,11 @@ with tab_advice:
         """, unsafe_allow_html=True)
         
     st.markdown("---")
-    
+
     # Dynamic Goal Simulator
     st.markdown("#### 🎯 Interactive Monthly Savings Simulator")
     st.caption("Simulate how minor cuts in discretionary spending help reach your target semester savings goal")
-    
+
     sim_col1, sim_col2 = st.columns([1.2, 1])
     with sim_col1:
         target_pct = st.slider("Select Target Savings Percentage on Discretionary Spend:", min_value=5, max_value=40, value=15, step=5)
@@ -644,127 +653,127 @@ with tab_advice:
         st.write(f"• **Entertainment**: Cut ₹{ent_trim:,.2f}/mo (share 1 subscription)")
         st.write(f"• **Personal Shopping**: Cut ₹{(potential_monthly_savings - dining_trim - ent_trim):,.2f}/mo (avoid impulse buys)")
 
-# -------------------------------------------------------------
-# TAB 4: K-MEANS CLUSTERING (MACHINE LEARNING)
-# -------------------------------------------------------------
-with tab_ml:
-    st.subheader("🤖 Machine Learning: Student Spending Archetypes (K-Means)")
-    st.caption("Unsupervised clustering models group student financial profiles into behavioral spending personas")
-    
-    # Generate representative peer student dataset for clustering model
-    np.random.seed(42)
-    c1_spend = np.random.normal(5200, 700, 30)
-    c1_ratio = np.random.normal(0.22, 0.04, 30)
-    c1_freq = np.random.normal(20, 4, 30)
-    
-    c2_spend = np.random.normal(11500, 1200, 30)
-    c2_ratio = np.random.normal(0.58, 0.06, 30)
-    c2_freq = np.random.normal(52, 6, 30)
-    
-    c3_spend = np.random.normal(8200, 900, 30)
-    c3_ratio = np.random.normal(0.38, 0.05, 30)
-    c3_freq = np.random.normal(32, 5, 30)
-    
-    c4_spend = np.random.normal(9400, 1000, 30)
-    c4_ratio = np.random.normal(0.28, 0.05, 30)
-    c4_freq = np.random.normal(22, 4, 30)
-    
-    sim_spend = np.clip(np.concatenate([c1_spend, c2_spend, c3_spend, c4_spend]), 3000, 18000)
-    sim_ratio = np.clip(np.concatenate([c1_ratio, c2_ratio, c3_ratio, c4_ratio]), 0.10, 0.85)
-    sim_freq = np.clip(np.concatenate([c1_freq, c2_freq, c3_freq, c4_freq]), 8, 70)
-    sim_avg_tx = sim_spend / sim_freq
-    
-    cohort_df = pd.DataFrame({
-        "Total_Spend": sim_spend,
-        "Discretionary_Ratio": sim_ratio * 100,
-        "Txn_Frequency": sim_freq,
-        "Avg_Txn_Amount": sim_avg_tx
-    })
-    
-    # Compute User's actual feature values from real data
-    user_total_spend = avg_monthly_spend
-    user_discretionary_ratio = discretionary_ratio
-    user_frequency = num_txns / unique_months if unique_months > 0 else num_txns
-    user_avg_tx = total_spend / num_txns if num_txns > 0 else 100.0
-    
-    # Train K-Means
-    features = ["Total_Spend", "Discretionary_Ratio", "Txn_Frequency", "Avg_Txn_Amount"]
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(cohort_df[features])
-    
-    kmeans = KMeans(n_clusters=4, random_state=42, n_init=10)
-    cohort_df["Cluster"] = kmeans.fit_predict(X_scaled)
-    
-    archetype_names = {
-        0: "🌱 The Frugal Saver (Disciplined, minimal wants)",
-        1: "🦋 The Social Butterfly (High wants & leisure)",
-        2: "⚖️ The Balanced Budgeter (Moderate & steady)",
-        3: "🔬 The Academic Investor (Targeted essential spends)"
-    }
-    
-    # Predict user cluster from actual user feature vector
-    user_features = np.array([[user_total_spend, user_discretionary_ratio, user_frequency, user_avg_tx]])
-    user_scaled = scaler.transform(user_features)
-    user_cluster = int(kmeans.predict(user_scaled)[0])
-    
-    cohort_df["Archetype"] = cohort_df["Cluster"].map(archetype_names)
-    user_archetype_label = archetype_names[user_cluster]
-    
-    # User Profile Box in Exact Dark Theme
-    st.markdown(f"""
-    <div class="cluster-box">
-        <span class="cluster-tag">YOUR CLUSTER RESULT</span>
-        <div class="cluster-title">{user_archetype_label}</div>
-        <p style="color: #f3e8ff; margin: 0; font-size: 0.95rem;">
-            Based on your actual monthly burn rate of <b style="color: #c084fc;">₹{user_total_spend:,.2f}</b> and discretionary ratio of <b style="color: #c084fc;">{user_discretionary_ratio:.1f}%</b> from <b>expenses.csv</b>, the K-Means algorithm classifies your spending profile into this archetype.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Scatter Plot
-    st.markdown("##### 🗺️ 2D Cluster Space: Discretionary Spending Ratio vs Total Spend")
-    
-    fig_cluster = px.scatter(
-        cohort_df,
-        x="Discretionary_Ratio",
-        y="Total_Spend",
-        color="Archetype",
-        size="Txn_Frequency",
-        hover_data=["Avg_Txn_Amount"],
-        color_discrete_sequence=["#10b981", "#e879f9", "#7c3aed", "#38bdf8"],
-        labels={"Discretionary_Ratio": "Discretionary Spending Ratio (%)", "Total_Spend": "Monthly Total Spend (₹)"}
-    )
-    
-    # Add User marker
-    fig_cluster.add_trace(go.Scatter(
-        x=[user_discretionary_ratio],
-        y=[user_total_spend],
-        mode="markers+text",
-        marker=dict(symbol="star", size=24, color="#e879f9", line=dict(width=2, color="#ffffff")),
-        name="⭐ YOU ARE HERE",
-        text=["⭐ YOU ARE HERE"],
-        textposition="top center",
-        textfont=dict(color="#f3e8ff", size=13, family="sans-serif")
-    ))
-    
-    fig_cluster.update_layout(
-        **DARK_LAYOUT,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        height=450
-    )
-    st.plotly_chart(fig_cluster, use_container_width=True)
-    
-    st.markdown("---")
-    
-    # Archetype Characteristics Table
-    st.markdown("##### 📋 Student Spending Archetype Benchmark Table")
-    summary_archetypes = cohort_df.groupby("Archetype")[["Total_Spend", "Discretionary_Ratio", "Txn_Frequency", "Avg_Txn_Amount"]].mean().reset_index()
-    summary_archetypes.columns = ["Student Archetype", "Avg Monthly Spend (₹)", "Discretionary Ratio (%)", "Monthly Txns", "Avg Txn Size (₹)"]
-    summary_archetypes["Avg Monthly Spend (₹)"] = summary_archetypes["Avg Monthly Spend (₹)"].apply(lambda x: f"₹{x:,.2f}")
-    summary_archetypes["Discretionary Ratio (%)"] = summary_archetypes["Discretionary Ratio (%)"].apply(lambda x: f"{x:.1f}%")
-    summary_archetypes["Monthly Txns"] = summary_archetypes["Monthly Txns"].apply(lambda x: f"{x:.0f} txns")
-    summary_archetypes["Avg Txn Size (₹)"] = summary_archetypes["Avg Txn Size (₹)"].apply(lambda x: f"₹{x:,.2f}")
-    
-    st.dataframe(summary_archetypes, use_container_width=True, hide_index=True)
-    
-    st.info("💡 **Model Methodology**: Feature standardization via `StandardScaler()`, followed by partition-based clustering with `KMeans(k=4, random_state=42)`. Your current financial profile is dynamically scaled and projected onto the trained feature space.")
+    # -------------------------------------------------------------
+    # TAB 4: K-MEANS CLUSTERING (MACHINE LEARNING)
+    # -------------------------------------------------------------
+    with tab_ml:
+        st.subheader("🤖 Machine Learning: Student Spending Archetypes (K-Means)")
+        st.caption("Unsupervised clustering models group student financial profiles into behavioral spending personas")
+
+        # Generate representative peer student dataset for clustering model
+        np.random.seed(42)
+        c1_spend = np.random.normal(5200, 700, 30)
+        c1_ratio = np.random.normal(0.22, 0.04, 30)
+        c1_freq = np.random.normal(20, 4, 30)
+
+        c2_spend = np.random.normal(11500, 1200, 30)
+        c2_ratio = np.random.normal(0.58, 0.06, 30)
+        c2_freq = np.random.normal(52, 6, 30)
+
+        c3_spend = np.random.normal(8200, 900, 30)
+        c3_ratio = np.random.normal(0.38, 0.05, 30)
+        c3_freq = np.random.normal(32, 5, 30)
+
+        c4_spend = np.random.normal(9400, 1000, 30)
+        c4_ratio = np.random.normal(0.28, 0.05, 30)
+        c4_freq = np.random.normal(22, 4, 30)
+
+        sim_spend = np.clip(np.concatenate([c1_spend, c2_spend, c3_spend, c4_spend]), 3000, 18000)
+        sim_ratio = np.clip(np.concatenate([c1_ratio, c2_ratio, c3_ratio, c4_ratio]), 0.10, 0.85)
+        sim_freq = np.clip(np.concatenate([c1_freq, c2_freq, c3_freq, c4_freq]), 8, 70)
+        sim_avg_tx = sim_spend / sim_freq
+
+        cohort_df = pd.DataFrame({
+            "Total_Spend": sim_spend,
+            "Discretionary_Ratio": sim_ratio * 100,
+            "Txn_Frequency": sim_freq,
+            "Avg_Txn_Amount": sim_avg_tx
+        })
+
+        # Compute User's actual feature values from real data
+        user_total_spend = avg_monthly_spend
+        user_discretionary_ratio = discretionary_ratio
+        user_frequency = num_txns / unique_months if unique_months > 0 else num_txns
+        user_avg_tx = total_spend / num_txns if num_txns > 0 else 100.0
+
+        # Train K-Means
+        features = ["Total_Spend", "Discretionary_Ratio", "Txn_Frequency", "Avg_Txn_Amount"]
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(cohort_df[features])
+
+        kmeans = KMeans(n_clusters=4, random_state=42, n_init=10)
+        cohort_df["Cluster"] = kmeans.fit_predict(X_scaled)
+
+        archetype_names = {
+            0: "🌱 The Frugal Saver (Disciplined, minimal wants)",
+            1: "🦋 The Social Butterfly (High wants & leisure)",
+            2: "⚖️ The Balanced Budgeter (Moderate & steady)",
+            3: "🔬 The Academic Investor (Targeted essential spends)"
+        }
+
+        # Predict user cluster from actual user feature vector
+        user_features = np.array([[user_total_spend, user_discretionary_ratio, user_frequency, user_avg_tx]])
+        user_scaled = scaler.transform(user_features)
+        user_cluster = int(kmeans.predict(user_scaled)[0])
+
+        cohort_df["Archetype"] = cohort_df["Cluster"].map(archetype_names)
+        user_archetype_label = archetype_names[user_cluster]
+
+        # User Profile Box in Exact Dark Theme
+        st.markdown(f"""
+        <div class="cluster-box">
+            <span class="cluster-tag">YOUR CLUSTER RESULT</span>
+            <div class="cluster-title">{user_archetype_label}</div>
+            <p style="color: #f3e8ff; margin: 0; font-size: 0.95rem;">
+                Based on your actual monthly burn rate of <b style="color: #c084fc;">₹{user_total_spend:,.2f}</b> and discretionary ratio of <b style="color: #c084fc;">{user_discretionary_ratio:.1f}%</b> from <b>expenses.csv</b>, the K-Means algorithm classifies your spending profile into this archetype.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Scatter Plot
+        st.markdown("##### 🗺️ 2D Cluster Space: Discretionary Spending Ratio vs Total Spend")
+
+        fig_cluster = px.scatter(
+            cohort_df,
+            x="Discretionary_Ratio",
+            y="Total_Spend",
+            color="Archetype",
+            size="Txn_Frequency",
+            hover_data=["Avg_Txn_Amount"],
+            color_discrete_sequence=["#10b981", "#e879f9", "#7c3aed", "#38bdf8"],
+            labels={"Discretionary_Ratio": "Discretionary Spending Ratio (%)", "Total_Spend": "Monthly Total Spend (₹)"}
+        )
+
+        # Add User marker
+        fig_cluster.add_trace(go.Scatter(
+            x=[user_discretionary_ratio],
+            y=[user_total_spend],
+            mode="markers+text",
+            marker=dict(symbol="star", size=24, color="#e879f9", line=dict(width=2, color="#ffffff")),
+            name="⭐ YOU ARE HERE",
+            text=["⭐ YOU ARE HERE"],
+            textposition="top center",
+            textfont=dict(color="#f3e8ff", size=13, family="sans-serif")
+        ))
+
+        fig_cluster.update_layout(
+            **DARK_LAYOUT,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            height=450
+        )
+        st.plotly_chart(fig_cluster, use_container_width=True)
+
+        st.markdown("---")
+
+        # Archetype Characteristics Table
+        st.markdown("##### 📋 Student Spending Archetype Benchmark Table")
+        summary_archetypes = cohort_df.groupby("Archetype")[["Total_Spend", "Discretionary_Ratio", "Txn_Frequency", "Avg_Txn_Amount"]].mean().reset_index()
+        summary_archetypes.columns = ["Student Archetype", "Avg Monthly Spend (₹)", "Discretionary Ratio (%)", "Monthly Txns", "Avg Txn Size (₹)"]
+        summary_archetypes["Avg Monthly Spend (₹)"] = summary_archetypes["Avg Monthly Spend (₹)"].apply(lambda x: f"₹{x:,.2f}")
+        summary_archetypes["Discretionary Ratio (%)"] = summary_archetypes["Discretionary Ratio (%)"].apply(lambda x: f"{x:.1f}%")
+        summary_archetypes["Monthly Txns"] = summary_archetypes["Monthly Txns"].apply(lambda x: f"{x:.0f} txns")
+        summary_archetypes["Avg Txn Size (₹)"] = summary_archetypes["Avg Txn Size (₹)"].apply(lambda x: f"₹{x:,.2f}")
+
+        st.dataframe(summary_archetypes, use_container_width=True, hide_index=True)
+
+        st.info("💡 **Model Methodology**: Feature standardization via `StandardScaler()`, followed by partition-based clustering with `KMeans(k=4, random_state=42)`. Your current financial profile is dynamically scaled and projected onto the trained feature space.")
