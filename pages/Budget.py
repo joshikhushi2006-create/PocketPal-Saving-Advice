@@ -277,15 +277,25 @@ fig.add_trace(go.Bar(
     y=comp_df["Actual Spent"],
     marker_color="#7c3aed"
 ))
+
+layout_config = DARK_LAYOUT.copy()
+layout_config["legend"] = dict(
+    orientation="h",
+    yanchor="bottom",
+    y=1.02,
+    xanchor="right",
+    x=1
+)
+
 fig.update_layout(
-    **DARK_LAYOUT,
+    **layout_config,
     barmode="group",
     title=f"Category Budget Comparison ({selected_month})",
     xaxis_tickangle=-30,
     yaxis_title="Amount (₹)",
-    margin=dict(l=20, r=20, t=50, b=80),
-    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    margin=dict(l=20, r=20, t=50, b=80)
 )
+
 st.plotly_chart(fig, use_container_width=True)
 
 # Progress Bars per category
